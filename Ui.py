@@ -1,13 +1,17 @@
+import tempfile
+
 from PyQt5.QtCore import Qt, QFileInfo
 from PyQt5 import QtGui
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QScrollArea, QMessageBox, QMainWindow, QMenu, QAction, \
-    qApp, QFileDialog
+    qApp, QFileDialog, QPushButton, QDialog
 import SuperResolution as sr
 import cv2
 import BicubicInterpolation as bi
 import LinearInterpolation as li
 import NearestNeighbourInterpolation as ni
+
+from ImageEditor import ImageAdjustmentDialog
 
 
 class QImageViewer(QMainWindow):
@@ -48,18 +52,34 @@ class QImageViewer(QMainWindow):
                 QMessageBox.information(self, "Image Viewer", "Cannot load %s." % fileName)
                 return
 
+            self.image = image
             self.imageLabel.setPixmap(QPixmap.fromImage(image))
             self.scaleFactor = 1.0
             self.srAct.setEnabled(True)
             self.bicubicAct.setEnabled(True)
             self.linearAct.setEnabled(True)
             self.nearestAct.setEnabled(True)
+            self.adjustImageAct.setEnabled(True)
             self.scrollArea.setVisible(True)
             self.fitToWindowAct.setEnabled(True)
             self.updateActions()
 
             if not self.fitToWindowAct.isChecked():
                 self.imageLabel.adjustSize()
+
+    def adjust_image(self):
+        if self.image is not None:
+            # Create an instance of the ImageAdjustmentDialog class
+            adjust_dialog = ImageAdjustmentDialog(self.image)
+            result = adjust_dialog.exec_()
+            if result == QDialog.Accepted:
+                img = QImage(adjust_dialog.image)
+                self.image = img
+                self.imageLabel.setPixmap(QPixmap.fromImage(img))
+                self.normalSize()
+
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
 
     def normalSize(self):
         self.imageLabel.adjustSize()
@@ -112,8 +132,10 @@ class QImageViewer(QMainWindow):
             self.normalSize()
 
     def savePic(self):
-        filename = QFileDialog.getSaveFileName(filter="JPG(.jpg);;PNG(.png);;TIFF(.tiff);;BMP(.bmp)")[0]
-        cv2.imwrite(filename, self.image)
+        if self.image is not None:
+            filename, _ = QFileDialog.getSaveFileName(self, filter="JPG(*.jpg);;PNG(*.png);;TIFF(*.tiff);;BMP(*.bmp)")
+            if filename:
+                cv2.imwrite(filename, self.image)
 
     def createActions(self):
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O", triggered=self.open)
@@ -125,6 +147,7 @@ class QImageViewer(QMainWindow):
         self.bicubicAct = QAction("&Bicub", self, enabled=False, triggered=self.bicubic)
         self.linearAct = QAction("&Linear", self, enabled=False, triggered=self.linear)
         self.nearestAct = QAction("&Nearest", self, enabled=False, triggered=self.nearest)
+        self.adjustImageAct = QAction("Adjust Image", self, enabled=False, triggered=self.adjust_image)
 
 
 
@@ -144,7 +167,7 @@ class QImageViewer(QMainWindow):
         self.picsMenu.addAction(self.bicubicAct)
         self.picsMenu.addAction(self.linearAct)
         self.picsMenu.addAction(self.nearestAct)
-
+        self.picsMenu.addAction(self.adjustImageAct)
 
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)

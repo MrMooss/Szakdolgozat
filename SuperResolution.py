@@ -12,7 +12,7 @@ from PIL import Image, ImageQt
 import tempfile
 import shutil
 
-generator = load_model('gen_e_20.h5', compile=False)
+generator = load_model('gen_e_25.h5', compile=False)
 
 
 def generateHr(path):
