@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QFileInfo
 from PyQt5 import QtGui
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QScrollArea, QMessageBox, QMainWindow, QMenu, QAction, \
-    qApp, QFileDialog, QPushButton, QDialog
+    qApp, QFileDialog, QPushButton, QDialog, QProgressDialog
 import SuperResolution as sr
 import cv2
 import BicubicInterpolation as bi
@@ -97,14 +97,21 @@ class QImageViewer(QMainWindow):
 
     def superRes(self):
         if self.path != '':
+            loading_dialog = QProgressDialog("Super-Res in progress...", None, 0, 0, self)
+            loading_dialog.setWindowModality(Qt.WindowModal)
+            loading_dialog.setWindowTitle("Loading")
+            loading_dialog.setCancelButton(None)
+            loading_dialog.show()
+            qApp.processEvents()
+
             img = sr.generateHr(self.path)
+            loading_dialog.close()
             self.image = img
             img_bytes = img.tobytes()
 
-            # Define the width, height, and bytes per line
             width = img.shape[1]
             height = img.shape[0]
-            bytes_per_line = img.shape[1] * 3  # Assuming 3 channels (BGR)
+            bytes_per_line = img.shape[1] * 3
 
             # Create a QImage from the bytes
             img = QImage(img_bytes, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
