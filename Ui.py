@@ -11,6 +11,7 @@ import BicubicInterpolation as bi
 import LinearInterpolation as li
 import NearestNeighbourInterpolation as ni
 import shutil
+import os
 
 from ImageEditor import ImageAdjustmentDialog
 
@@ -20,6 +21,7 @@ class QImageViewer(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.interpol = False
         self.path = ''
 
         self.image = None
@@ -48,17 +50,17 @@ class QImageViewer(QMainWindow):
                                                 'Images (*.png *.jpeg *.jpg *.bmp *.gif)', options=options)
         if fileName:
             self.path = fileName
+            self.image = cv2.imread(fileName)
             image = QImage(fileName)
             if image.isNull():
                 QMessageBox.information(self, "Image Viewer", "Cannot load %s." % fileName)
                 return
-
-            self.image = image
             self.imageLabel.setPixmap(QPixmap.fromImage(image))
             self.scaleFactor = 1.0
             self.srAct.setEnabled(True)
             self.bicubicAct.setEnabled(True)
             self.linearAct.setEnabled(True)
+            self.lanczosAct.setEnabled(True)
             self.nearestAct.setEnabled(True)
             self.adjustImageAct.setEnabled(True)
             self.scrollArea.setVisible(True)
@@ -72,11 +74,15 @@ class QImageViewer(QMainWindow):
     def adjust_image(self):
         if self.image is not None:
             # Create an instance of the ImageAdjustmentDialog class
-            adjust_dialog = ImageAdjustmentDialog(self.image)
+            adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
             result = adjust_dialog.exec_()
             if result == QDialog.Accepted:
-                img = QImage(adjust_dialog.image)
-                self.image = img
+                self.interpol = adjust_dialog.interpol
+                height, width, channel = adjust_dialog.image.shape
+                bytesPerLine = 3 * width
+                qImg = QImage(adjust_dialog.image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+                img = QImage(qImg)
+                self.image = adjust_dialog.image
                 self.imageLabel.setPixmap(QPixmap.fromImage(img))
                 self.normalSize()
 
@@ -124,29 +130,39 @@ class QImageViewer(QMainWindow):
 
     def bicubic(self):
         if self.path != '':
+            self.interpol = True
             img = bi.bicubic_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
             # self.imageLabel.setPixmap(QPixmap.fromImage(p))
             self.imageLabel.setPixmap(QPixmap('bicubic.jpg'))
+            os.remove('bicubic.jpg')
             self.normalSize()
 
     def linear(self):
         if self.path != '':
+            self.interpol = True
             img = li.linear_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
             # self.imageLabel.setPixmap(QPixmap.fromImage(p))
-            self.imageLabel.setPixmap(QPixmap('linear.jpg'))
+            self.imageLabel.setPixmap(QPixmap('linearx2.jpg'))
+            os.remove('linearx2.jpg')
             self.normalSize()
+
+    def lanczos(self):
+        if self.path != '':
+            return None
 
     def nearest(self):
         if self.path != '':
+            self.interpol = True
             img = ni.nearest_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
             # self.imageLabel.setPixmap(QPixmap.fromImage(p))
             self.imageLabel.setPixmap(QPixmap('nearest.jpg'))
+            os.remove('nearest.jpg')
             self.normalSize()
 
     def savePic(self):
@@ -170,6 +186,7 @@ class QImageViewer(QMainWindow):
         self.bicubicAct = QAction("&Bicub", self, enabled=False, triggered=self.bicubic)
         self.linearAct = QAction("&Linear", self, enabled=False, triggered=self.linear)
         self.nearestAct = QAction("&Nearest", self, enabled=False, triggered=self.nearest)
+        self.lanczosAct = QAction("&Lanczos", self, enabled=False, triggered=self.lanczos)
         self.adjustImageAct = QAction("Adjust Image", self, enabled=False, triggered=self.adjust_image)
 
 
@@ -191,6 +208,7 @@ class QImageViewer(QMainWindow):
         self.picsMenu.addAction(self.bicubicAct)
         self.picsMenu.addAction(self.linearAct)
         self.picsMenu.addAction(self.nearestAct)
+        self.picsMenu.addAction(self.lanczosAct)
         self.picsMenu.addAction(self.adjustImageAct)
 
         self.menuBar().addMenu(self.fileMenu)

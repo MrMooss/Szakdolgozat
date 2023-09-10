@@ -12,6 +12,7 @@ def u(s, a):
     return 0
 
 def padding(img, H, W, C):
+    # zimg = zero_image = image zero matrix
     zimg = np.zeros((H + 4, W + 4, C))
     zimg[2:H + 2, 2:W + 2, :C] = img
 
@@ -76,10 +77,10 @@ def bicubic(img, ratio, a):
 def bicubic_interpolation(path):
     img = cv2.imread(path)
 
-    ratio = 2
+    ratio = 4
     coefficient = -1 / 2
 
-    dst = bicubic(img, ratio, coefficient)
-    cv2.imwrite('bicubic.jpg', dst)
+    bicubicImg = bicubic(img, ratio, coefficient)
+    cv2.imwrite('bicubic.jpg', bicubicImg)
 
-    return dst
+    return bicubicImg
