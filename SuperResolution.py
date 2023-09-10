@@ -29,9 +29,12 @@ def generateHr(path):
                 hr = cv2.convertScaleAbs(hr, alpha=(255.0))
                 cv2.imwrite(temp + '/' + os.path.basename(im), hr[0, :, :, ::-1])
             imagehigh = ism.merge_images(temp, y, x)
-            imagehigh = imagehigh.crop((0, 0, h*4, w*4))
-            imagehigh.save(temp + '/highimg.jpg')
-            imagehigh = cv2.imread(temp + '/highimg.jpg')
+            #imagehigh = ism.blend_merge(temp)
+            #imagehigh = imagehigh.crop((0, 0, h*4, w*4))
+            imagehigh = imagehigh[0:w*4, 0:h*4]
+            #imagehigh.save(temp + '/highimg.jpg')
+            cv2.imwrite(temp + '/highimg.jpg', imagehigh)
+            #imagehigh = cv2.imread(temp + '/highimg.jpg')
             return imagehigh
         else:
             img = convertImage(path)

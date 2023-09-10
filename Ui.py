@@ -97,7 +97,16 @@ class QImageViewer(QMainWindow):
         if self.path != '':
             img = sr.generateHr(self.path)
             self.image = img
-            img = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_BGR888)
+            img_bytes = img.tobytes()
+
+            # Define the width, height, and bytes per line
+            width = img.shape[1]
+            height = img.shape[0]
+            bytes_per_line = img.shape[1] * 3  # Assuming 3 channels (BGR)
+
+            # Create a QImage from the bytes
+            img = QImage(img_bytes, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
+
             self.imageLabel.setPixmap(QPixmap.fromImage(img))
             self.normalSize()
 
