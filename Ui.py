@@ -10,6 +10,7 @@ import cv2
 import BicubicInterpolation as bi
 import LinearInterpolation as li
 import NearestNeighbourInterpolation as ni
+import shutil
 
 from ImageEditor import ImageAdjustmentDialog
 
@@ -62,6 +63,7 @@ class QImageViewer(QMainWindow):
             self.adjustImageAct.setEnabled(True)
             self.scrollArea.setVisible(True)
             self.fitToWindowAct.setEnabled(True)
+            self.saveImageAct.setEnabled(True)
             self.updateActions()
 
             if not self.fitToWindowAct.isChecked():
@@ -142,9 +144,13 @@ class QImageViewer(QMainWindow):
 
     def savePic(self):
         if self.image is not None:
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
             filename, _ = QFileDialog.getSaveFileName(self, filter="JPG(*.jpg);;PNG(*.png);;TIFF(*.tiff);;BMP(*.bmp)")
             if filename:
-                cv2.imwrite(filename, self.image)
+                rgb_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+                cv2.imwrite(filename, rgb_image)
+
 
     def createActions(self):
         self.openAct = QAction("&Open...", self, shortcut="Ctrl+O", triggered=self.open)
@@ -153,6 +159,7 @@ class QImageViewer(QMainWindow):
         self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+S", enabled=False, triggered=self.normalSize)
         self.fitToWindowAct = QAction("&Fit to Window", self, enabled=False, checkable=True, shortcut="Ctrl+F",
                                       triggered=self.fitToWindow)
+        self.saveImageAct = QAction("&Save", self, enabled=False, triggered=self.savePic)
         self.bicubicAct = QAction("&Bicub", self, enabled=False, triggered=self.bicubic)
         self.linearAct = QAction("&Linear", self, enabled=False, triggered=self.linear)
         self.nearestAct = QAction("&Nearest", self, enabled=False, triggered=self.nearest)
@@ -165,6 +172,7 @@ class QImageViewer(QMainWindow):
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
+        self.fileMenu.addAction(self.saveImageAct)
 
         self.viewMenu = QMenu("&View", self)
         self.viewMenu.addAction(self.normalSizeAct)

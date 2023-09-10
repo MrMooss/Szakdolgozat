@@ -33,7 +33,6 @@ def generateHr(path):
             #imagehigh = imagehigh.crop((0, 0, h*4, w*4))
             imagehigh = imagehigh[0:w*4, 0:h*4]
             #imagehigh.save(temp + '/highimg.jpg')
-            cv2.imwrite(temp + '/highimg.jpg', imagehigh)
             #imagehigh = cv2.imread(temp + '/highimg.jpg')
             return imagehigh
         else:
