@@ -6,8 +6,8 @@ def nearest_interpolation(path):
     fx = 4
     fy = 4
 
-    resized = cv2.resize(img, dsize=None, fx=fx, fy=fy, interpolation=cv2.INTER_NEAREST)
+    resizedNearest = cv2.resize(img, dsize=None, fx=fx, fy=fy, interpolation=cv2.INTER_NEAREST)
 
 
-    cv2.imwrite("nearest.jpg", resized)
-    return resized
+    cv2.imwrite("nearest.jpg", resizedNearest)
+    return resizedNearest

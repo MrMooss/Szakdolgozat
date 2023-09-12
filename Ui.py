@@ -10,6 +10,7 @@ import cv2
 import BicubicInterpolation as bi
 import LinearInterpolation as li
 import NearestNeighbourInterpolation as ni
+import LanczosInterpolation as lancz
 import shutil
 import os
 
@@ -152,7 +153,14 @@ class QImageViewer(QMainWindow):
 
     def lanczos(self):
         if self.path != '':
-            return None
+            self.interpol = True
+            img = lancz.lanczos_interpolation(self.path)
+            self.image = img
+            # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
+            # self.imageLabel.setPixmap(QPixmap.fromImage(p))
+            self.imageLabel.setPixmap(QPixmap('lanczos.jpg'))
+            os.remove('lanczos.jpg')
+            self.normalSize()
 
     def nearest(self):
         if self.path != '':

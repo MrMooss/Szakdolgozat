@@ -59,7 +59,6 @@ class ImageAdjustmentDialog(QDialog):
         brightness = self.brightness_slider.value()
         contrast = contrast / 100
         saturation = saturation / 100
-
         #data = Image.fromarray(self.adjusted_image)
         #filter = ImageEnhance.Color(data)
         #self.adjusted_image = self.adjusted_image.filter(saturation)
