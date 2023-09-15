@@ -24,13 +24,12 @@ class QImageViewer(QMainWindow):
 
         self.interpol = False
         self.path = ''
-
         self.image = None
         self.imageLabel = QLabel()
         self.imageLabel.setBackgroundRole(QPalette.Light)
         self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
-
+        
         self.scrollArea = QScrollArea()
         self.scrollArea.setBackgroundRole(QPalette.Dark)
         self.scrollArea.setWidget(self.imageLabel)
@@ -68,22 +67,23 @@ class QImageViewer(QMainWindow):
             self.fitToWindowAct.setEnabled(True)
             self.saveImageAct.setEnabled(True)
             self.updateActions()
-
+            self.adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
+            
             if not self.fitToWindowAct.isChecked():
                 self.imageLabel.adjustSize()
 
     def adjust_image(self):
         if self.image is not None:
             # Create an instance of the ImageAdjustmentDialog class
-            adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
-            result = adjust_dialog.exec_()
+            # adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
+            result = self.adjust_dialog.exec_()
             if result == QDialog.Accepted:
-                self.interpol = adjust_dialog.interpol
-                height, width, channel = adjust_dialog.image.shape
+                self.interpol = self.adjust_dialog.interpol
+                height, width, channel = self.adjust_dialog.adjusted_image.shape
                 bytesPerLine = 3 * width
-                qImg = QImage(adjust_dialog.image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+                qImg = QImage(self.adjust_dialog.adjusted_image.data, width, height, bytesPerLine, QImage.Format_RGB888)
                 img = QImage(qImg)
-                self.image = adjust_dialog.image
+                self.image = self.adjust_dialog.adjusted_image
                 self.imageLabel.setPixmap(QPixmap.fromImage(img))
                 self.normalSize()
 
@@ -104,6 +104,7 @@ class QImageViewer(QMainWindow):
 
     def superRes(self):
         if self.path != '':
+            self.adjust_dialog.interpol = False
             loading_dialog = QProgressDialog("Super-Res in progress...", None, 0, 0, self)
             loading_dialog.setWindowModality(Qt.WindowModal)
             loading_dialog.setWindowTitle("Loading")
@@ -131,7 +132,7 @@ class QImageViewer(QMainWindow):
 
     def bicubic(self):
         if self.path != '':
-            self.interpol = True
+            self.adjust_dialog.interpol = True
             img = bi.bicubic_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -142,7 +143,7 @@ class QImageViewer(QMainWindow):
 
     def linear(self):
         if self.path != '':
-            self.interpol = True
+            self.adjust_dialog.interpol = True
             img = li.linear_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -153,7 +154,7 @@ class QImageViewer(QMainWindow):
 
     def lanczos(self):
         if self.path != '':
-            self.interpol = True
+            self.adjust_dialog.interpol = True
             img = lancz.lanczos_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -164,7 +165,7 @@ class QImageViewer(QMainWindow):
 
     def nearest(self):
         if self.path != '':
-            self.interpol = True
+            self.adjust_dialog.interpol = True
             img = ni.nearest_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
