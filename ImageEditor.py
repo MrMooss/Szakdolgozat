@@ -1,26 +1,38 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSlider, QPushButton, QHBoxLayout, QLabel, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
-from PyQt5.QtGui import QImage, QPixmap
-from PIL import Image, ImageEnhance
+from PyQt5.QtWidgets import (
+    QDialog, QVBoxLayout, QSlider, QPushButton, QHBoxLayout, QLabel, QGraphicsView,
+    QGraphicsScene, QGraphicsPixmapItem
+)
+from PyQt5.QtGui import QImage, QPixmap, QPainter
 import numpy as np
 import cv2
+
 
 class ImageAdjustmentDialog(QDialog):
     def __init__(self, image, interpol, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Image Adjustment")
 
-        self.original_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.original_image = image
         self.adjusted_image = image.copy()
         self.interpol = interpol
         self.contrast = 100
         self.saturation = 100
         self.brightness = 0
 
-        self.image_label = QLabel(self)
-        self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setPixmap(self.convert_cvimage_to_qpixmap(self.adjusted_image))
-        
+        # Create QGraphicsView and QGraphicsScene
+        self.graphics_view = QGraphicsView(self)
+        self.graphics_scene = QGraphicsScene()
+        self.graphics_view.setScene(self.graphics_scene)
+        self.graphics_view.setRenderHint(QPainter.Antialiasing, True)
+        self.graphics_view.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        self.graphics_view.setFixedSize(400, 300)
+
+        # Add QGraphicsPixmapItem to the QGraphicsScene
+        self.pixmap_item = QGraphicsPixmapItem()
+        self.graphics_scene.addItem(self.pixmap_item)
+        self.pixmap_item.setPixmap(self.convert_cvimage_to_qpixmap(self.adjusted_image))
+
         # Create sliders for contrast, saturation, and brightness adjustments
         self.contrast_label = QLabel("Contrast", self)
         self.contrast_slider = QSlider(Qt.Horizontal)
@@ -43,9 +55,15 @@ class ImageAdjustmentDialog(QDialog):
         self.ok_button.clicked.connect(self.apply_adjustments)
         self.cancel_button.clicked.connect(self.cancel_adjustments)
 
+        # Connect sliders to update the image preview
+        self.contrast_slider.valueChanged.connect(self.update_preview)
+        self.saturation_slider.valueChanged.connect(self.update_preview)
+        self.brightness_slider.valueChanged.connect(self.update_preview)
+        self.graphics_view.wheelEvent = self.zoom
+
         # Layout setup
         layout = QVBoxLayout()
-        layout.addWidget(self.image_label)
+        layout.addWidget(self.graphics_view)
         layout.addWidget(self.contrast_label)
         layout.addWidget(self.contrast_slider)
         layout.addWidget(self.saturation_label)
@@ -58,17 +76,8 @@ class ImageAdjustmentDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
 
-        # Connect sliders to update the image preview
-        self.contrast_slider.valueChanged.connect(self.update_preview)
-        self.saturation_slider.valueChanged.connect(self.update_preview)
-        self.brightness_slider.valueChanged.connect(self.update_preview)
-
     def update_preview(self):
-        
-        if self.interpol:
-            rgb_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
-            self.interpol = False
-        
+
         contrast = self.contrast_slider.value()
         saturation = self.saturation_slider.value()
         brightness = self.brightness_slider.value()
@@ -81,12 +90,10 @@ class ImageAdjustmentDialog(QDialog):
         s = np.clip(s, 0, 255)
         imghsv = cv2.merge([h, s, v])
         rgb_image = cv2.cvtColor(imghsv.astype("uint8"), cv2.COLOR_HSV2RGB)
-
-
         cv2.convertScaleAbs(rgb_image, rgb_image, contrast, brightness)
 
         self.adjusted_image = rgb_image.copy()
-        self.image_label.setPixmap(self.convert_cvimage_to_qpixmap(self.adjusted_image))
+        self.pixmap_item.setPixmap(self.convert_cvimage_to_qpixmap(self.adjusted_image))
 
     def convert_cvimage_to_qpixmap(self, image):
         height, width, channel = image.shape
@@ -99,3 +106,9 @@ class ImageAdjustmentDialog(QDialog):
 
     def cancel_adjustments(self):
         self.reject()
+
+    def zoom(self, event):
+        factor = 1.2
+        if event.angleDelta().y() < 0:
+            factor = 1.0 / factor
+        self.graphics_view.scale(factor, factor)

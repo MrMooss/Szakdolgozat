@@ -44,9 +44,9 @@ import os
 def expand_image(img):
     h, w = img.size
     a, b = h, w
-    while a % 30 != 0:
+    while a % 32 != 0:
         a = a + 1
-    while b % 30 != 0:
+    while b % 32 != 0:
         b = b + 1
     img2 = img.crop((0, 0, a, b))
 
@@ -109,10 +109,11 @@ def merge_images(path, w, h):
 
     new_im_np = np.array(new_im)
 
-    kernel_size = (5, 5)  # Adjust kernel size as needed
-    sigma = 0  # Adjust sigma value as needed
-    smoothed_image = cv2.GaussianBlur(new_im_np, kernel_size, sigma)
-    return smoothed_image
+    kernel_size = (5, 5)
+    sigma = 0
+    #smoothed_image = cv2.GaussianBlur(new_im_np, kernel_size, sigma)
+    noise_removed = cv2.medianBlur(new_im_np, 3)
+    return noise_removed
 
 
 def merge_pad_images(path, w, h):

@@ -39,6 +39,7 @@ class QImageViewer(QMainWindow):
 
         self.createActions()
         self.createMenus()
+        self.adjust_dialog = None
 
         self.setWindowTitle("Super-resolution")
         self.resize(800, 600)
@@ -67,7 +68,6 @@ class QImageViewer(QMainWindow):
             self.fitToWindowAct.setEnabled(True)
             self.saveImageAct.setEnabled(True)
             self.updateActions()
-            self.adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
             
             if not self.fitToWindowAct.isChecked():
                 self.imageLabel.adjustSize()
@@ -75,7 +75,9 @@ class QImageViewer(QMainWindow):
     def adjust_image(self):
         if self.image is not None:
             # Create an instance of the ImageAdjustmentDialog class
-            # adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
+            if self.interpol:
+                self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+            self.adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
             result = self.adjust_dialog.exec_()
             if result == QDialog.Accepted:
                 self.interpol = self.adjust_dialog.interpol
@@ -104,7 +106,7 @@ class QImageViewer(QMainWindow):
 
     def superRes(self):
         if self.path != '':
-            self.adjust_dialog.interpol = False
+            self.interpol = False
             loading_dialog = QProgressDialog("Super-Res in progress...", None, 0, 0, self)
             loading_dialog.setWindowModality(Qt.WindowModal)
             loading_dialog.setWindowTitle("Loading")
@@ -132,7 +134,7 @@ class QImageViewer(QMainWindow):
 
     def bicubic(self):
         if self.path != '':
-            self.adjust_dialog.interpol = True
+            self.interpol = True
             img = bi.bicubic_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -143,7 +145,7 @@ class QImageViewer(QMainWindow):
 
     def linear(self):
         if self.path != '':
-            self.adjust_dialog.interpol = True
+            self.interpol = True
             img = li.linear_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -154,7 +156,7 @@ class QImageViewer(QMainWindow):
 
     def lanczos(self):
         if self.path != '':
-            self.adjust_dialog.interpol = True
+            self.interpol = True
             img = lancz.lanczos_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
@@ -165,7 +167,7 @@ class QImageViewer(QMainWindow):
 
     def nearest(self):
         if self.path != '':
-            self.adjust_dialog.interpol = True
+            self.interpol = True
             img = ni.nearest_interpolation(self.path)
             self.image = img
             # p = QImage(img, img.shape[1], img.shape[0], img.strides[0], QtGui.QImage.Format_RGB888)
