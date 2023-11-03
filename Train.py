@@ -14,6 +14,7 @@ hr_path = 'Data/hr_images'
 lr_list = os.listdir(lr_path)
 lr_list.sort()
 lr_images = []
+lr_list.pop(0)
 for img in tqdm(lr_list):
     lr_img = cv2.imread(lr_path + "/" + img)
     lr_img = cv2.cvtColor(lr_img, cv2.COLOR_BGR2RGB)
@@ -22,6 +23,7 @@ for img in tqdm(lr_list):
 hr_list = os.listdir(hr_path)
 hr_list.sort()
 hr_images = []
+hr_list.pop(0)
 for img in tqdm(hr_list):
     hr_img = cv2.imread(hr_path + "/" + img)
     hr_img = cv2.cvtColor(hr_img, cv2.COLOR_BGR2RGB)
@@ -86,7 +88,7 @@ for e in range(epochs):
 
       image_features = vgg.predict(hr_imgs)
 
-      g_loss, = gan_model1.train_on_batch([lr_imgs, hr_imgs], [real_label, image_features])
+      g_loss = gan_model1.train_on_batch([lr_imgs, hr_imgs], [real_label, image_features])
 
       d_losses.append(d_loss)
       g_losses.append(g_loss)

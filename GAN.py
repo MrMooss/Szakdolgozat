@@ -41,7 +41,7 @@ def create_gen(gen_ip, num_res_block):
 
     op = Conv2D(3, (9,9), padding="same")(layers)
 
-    return Model(inputs=gen_ip, outputs=op, name=str(++counter))
+    return Model(inputs=gen_ip, outputs=op, name='sanyi')
 
 
 def dic_block(input, filter, strides=1, bn=True):
@@ -68,13 +68,13 @@ def discriminator(disc_input):
     d10 = LeakyReLU(alpha=0.2)(d9)
     validity = Dense(1, activation='sigmoid')(d10)
 
-    return Model(disc_input, validity, name='1')
+    return Model(disc_input, validity, name='pali')
 
 
 def build_vgg(hr_shape):
     vgg = VGG19(weights="imagenet", include_top=False, input_shape=hr_shape)
 
-    return Model(inputs=vgg.inputs, outputs=vgg.layers[9].output, name=str(++counter))
+    return Model(inputs=vgg.inputs, outputs=vgg.layers[9].output, name='1')
 
 
 def createGan(gen, disc, vgg, lr_input, hr_input):
@@ -83,4 +83,4 @@ def createGan(gen, disc, vgg, lr_input, hr_input):
     disc.trainable = False
     val = disc(generator_image)
 
-    return Model(inputs=[lr_input, hr_input], outputs=[val, generator_features], name=str(++counter))
+    return Model(inputs=[lr_input, hr_input], outputs=[val, generator_features], name='attila')
