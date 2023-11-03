@@ -42,7 +42,7 @@ lr_shape = (lr_train.shape[1], lr_train.shape[2], lr_train.shape[3])
 hr_in = Input(shape=hr_shape)
 lr_in = Input(shape=lr_shape)
 
-gen = load_model('gen_e_25.h5', compile=False)
+gen = gan.create_gen(lr_in, 16)
 dis = gan.discriminator(hr_in)
 dis.compile(loss="binary_crossentropy", optimizer="adam", metrics=['accuracy'])
 
@@ -95,6 +95,5 @@ for e in range(epochs):
     d_losses = np.array(d_losses)
 
     print("epoch:", e + 1, "g_loss:", g_loss, "d_loss:", d_loss)
-    if (e + 1) % 5 == 0:
-      gen.save("gene" + str(e + 1) + ".h5")
-      dis.save("dise" + str(e + 1) + ".h5")
+    gen.save("gene.h5")
+    dis.save("dise.h5")
