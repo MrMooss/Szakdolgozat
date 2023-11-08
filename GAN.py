@@ -29,14 +29,14 @@ def create_gen(gen_ip, num_res_block):
     layers = add([layers, temp])
     layers = up_block(layers)
     layers = up_block(layers)
-    op = Conv2D(3, (9,9), padding="same", activation='linear')(layers)  # Changed activation to linear
-    return Model(inputs=gen_ip, outputs=op, name='sanyi')
+    op = Conv2D(3, (9,9), padding="same", activation='linear')(layers)
+    return Model(inputs=gen_ip, outputs=op, name='create_gen')
 
 def dic_block(input, filter, strides=1, bn=True):
     layer = Conv2D(filter, (3, 3), strides=strides, padding="same")(input)
     if bn:
         layer = BatchNormalization(momentum=0.8)(layer)
-    layer = LeakyReLU(alpha=0.3)(layer)  # Changed LeakyReLU alpha value
+    layer = LeakyReLU(alpha=0.3)(layer)
     return layer
 
 def discriminator(disc_input):
@@ -53,15 +53,15 @@ def discriminator(disc_input):
     d9 = Dense(df * 16)(d8_5)
     d10 = LeakyReLU(alpha=0.3)(d9)  # Changed LeakyReLU alpha value
     validity = Dense(1, activation='sigmoid')(d10)
-    return Model(disc_input, validity, name='pali')
+    return Model(disc_input, validity, name='discriminator')
 
 def build_vgg(hr_shape):
     vgg = VGG19(weights="imagenet", include_top=False, input_shape=hr_shape)
-    return Model(inputs=vgg.inputs, outputs=vgg.layers[9].output, name='1')
+    return Model(inputs=vgg.inputs, outputs=vgg.layers[9].output, name='build_vgg')
 
 def createGan(gen, disc, vgg, lr_input, hr_input):
     generator_image = gen(lr_input)
     generator_features = vgg(generator_image)
     disc.trainable = False
     val = disc(generator_image)
-    return Model(inputs=[lr_input, hr_input], outputs=[val, generator_features], name='attila')
+    return Model(inputs=[lr_input, hr_input], outputs=[val, generator_features], name='createGan')
