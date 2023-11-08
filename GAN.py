@@ -74,7 +74,7 @@ def discriminator(disc_input):
 def build_vgg(hr_shape):
     vgg = VGG19(weights="imagenet", include_top=False, input_shape=hr_shape)
 
-    return Model(inputs=vgg.inputs, outputs=vgg.layers[9].output, name='1')
+    return Model(inputs=vgg.inputs, outputs=vgg.layers[10].output, name='1')
 
 
 def createGan(gen, disc, vgg, lr_input, hr_input):
