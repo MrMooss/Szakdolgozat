@@ -2,6 +2,7 @@ import GAN as gan
 import os
 import cv2
 import numpy as np
+import tensorflow as tf
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -9,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from keras.layers import *
 from keras.models import load_model
 
+loadedGen = tf.keras.models.load_model('gene.h5', compile = False)
+loadedDis = tf.keras.models.load_model('dise.h5', compile = False)
 lr_path = 'Data/lr_images'
 hr_path = 'Data/hr_images'
 lr_list = os.listdir(lr_path)
@@ -44,14 +47,14 @@ lr_shape = (lr_train.shape[1], lr_train.shape[2], lr_train.shape[3])
 hr_in = Input(shape=hr_shape)
 lr_in = Input(shape=lr_shape)
 
-gen = gan.create_gen(lr_in, 16)
-dis = gan.discriminator(hr_in)
-dis.compile(loss="binary_crossentropy", optimizer="adam", metrics=['accuracy'])
+#gen = gan.create_gen(lr_in, 16)
+#dis = gan.discriminator(hr_in)
+loadedDis.compile(loss="binary_crossentropy", optimizer="adam", metrics=['accuracy'])
 
 vgg = gan.build_vgg((128,128,3))
 vgg.trainable = False
 
-gan_model1 = gan.createGan(gen, dis, vgg, lr_in, hr_in)
+gan_model1 = gan.createGan(loadedGen, loadedDis, vgg, lr_in, hr_in)
 
 gan_model1.compile(loss=["binary_crossentropy", "mse"], loss_weights=[1e-3, 1], optimizer="adam")
 
@@ -76,13 +79,13 @@ for e in range(epochs):
       lr_imgs = train_lr_batches[b]
       hr_imgs = train_hr_batches[b]
 
-      fake_imgs = gen.predict_on_batch(lr_imgs)
+      fake_imgs = loadedGen.predict_on_batch(lr_imgs)
 
-      dis.trainable = True
-      d_loss_gen = dis.train_on_batch(fake_imgs, fake_label)
-      d_loss_real = dis.train_on_batch(hr_imgs, real_label)
+      loadedDis.trainable = True
+      d_loss_gen = loadedDis.train_on_batch(fake_imgs, fake_label)
+      d_loss_real = loadedDis.train_on_batch(hr_imgs, real_label)
 
-      dis.trainable = False
+      loadedDis.trainable = False
 
       d_loss = 0.5 * np.add(d_loss_gen, d_loss_real)
 
@@ -97,5 +100,5 @@ for e in range(epochs):
     d_losses = np.array(d_losses)
 
     print("epoch:", e + 1, "g_loss:", g_loss, "d_loss:", d_loss)
-    gen.save("gene.h5")
-    dis.save("dise.h5")
+    loadedGen.save("gene.h5")
+    loadedDis.save("dise.h5")
