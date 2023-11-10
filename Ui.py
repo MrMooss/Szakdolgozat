@@ -182,7 +182,9 @@ class QImageViewer(QMainWindow):
             options |= QFileDialog.DontUseNativeDialog
             filename, _ = QFileDialog.getSaveFileName(self, filter="JPG(*.jpg);;PNG(*.png);;TIFF(*.tiff);;BMP(*.bmp)")
             if filename:
-                rgb_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+                rgb_image = cv2.convertScaleAbs(self.image)
+                if not self.interpol:
+                    rgb_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
                 cv2.imwrite(filename, rgb_image)
 
 
