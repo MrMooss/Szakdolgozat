@@ -88,6 +88,7 @@ class QImageViewer(QMainWindow):
                 self.image = self.adjust_dialog.adjusted_image
                 self.imageLabel.setPixmap(QPixmap.fromImage(img))
                 self.normalSize()
+                self.interpol = False
 
                 if not self.fitToWindowAct.isChecked():
                     self.imageLabel.adjustSize()

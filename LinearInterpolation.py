@@ -9,7 +9,6 @@ def resizeImage(name):
     old = np.asarray(img1)
     rows, cols, layers = old.shape
     new = np.zeros((2 * rows - 1, 2 * cols - 1, layers))
-
     for layer in range(3):
         new[:, :, layer] = resizeLayer(old[:, :, layer])
 
@@ -61,7 +60,6 @@ def pil2cv(image):
         new_image = np.array(image, dtype=np.uint8)
         new_image = cv2.cvtColor(new_image, cv2.COLOR_HSV2BGR)
     elif mode == 'YCbCr':
-        # XXX: not sure if YCbCr == YCrCb
         new_image = np.array(image, dtype=np.uint8)
         new_image = cv2.cvtColor(new_image, cv2.COLOR_YCrCb2BGR)
     elif mode == 'P' or mode == 'CMYK':
@@ -95,5 +93,9 @@ def resizeLayer(old):
     return new
 
 def linear_interpolation(path):
-    img = resizeImage(path)
-    return img
+    img = cv2.imread(path)
+    fx = 4
+    fy = 4
+    resizedImg = cv2.resize(img, dsize=None, fx=fx, fy=fy, interpolation=cv2.INTER_LINEAR)
+    cv2.imwrite("linearx2.jpg", resizedImg)
+    return resizedImg
