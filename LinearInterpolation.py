@@ -94,8 +94,14 @@ def resizeLayer(old):
 
 def linear_interpolation(path):
     img = cv2.imread(path)
-    fx = 4
-    fy = 4
-    resizedImg = cv2.resize(img, dsize=None, fx=fx, fy=fy, interpolation=cv2.INTER_LINEAR)
-    cv2.imwrite("linearx2.jpg", resizedImg)
-    return resizedImg
+    h, w, c = img.shape
+    if h == w :
+        img = resizeImage(path)
+        return img
+    else :
+        fx = 4
+        fy = 4
+        resizedImg = cv2.resize(img, dsize=None, fx=fx, fy=fy, interpolation=cv2.INTER_LINEAR)
+        cv2.imwrite("linearx2.jpg", resizedImg)
+        return resizedImg
+
