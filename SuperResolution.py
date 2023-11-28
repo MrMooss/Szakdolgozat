@@ -10,36 +10,62 @@ from PIL import Image, ImageQt
 import tempfile
 import shutil
 
-generator = load_model('gen_e_25.h5', compile=False)
+generator = load_model('best_gene_720_loss_2.26_ep.h5', compile=False)
 
 
-def generateHr(path):
+def generateHrOld(img):
     with tempfile.TemporaryDirectory() as temp:
-        img = Image.open(path)
+        #img = Image.open(path)
         h, w = img.size
         if h != 32 or w != 32:
             img = ism.expand_image(img)
             x, y = ism.crop(temp, img)
-            images = glob.glob(temp + '/*.jpg')
+            images = glob.glob(temp + '/bg_*.jpg')
             for im in images:
                 img2 = convertImage(im)
                 hr = generator.predict(img2)
                 hr = cv2.convertScaleAbs(hr, alpha=(255.0))
                 cv2.imwrite(temp + '/' + os.path.basename(im), hr[0, :, :, ::-1])
             imagehigh = ism.merge_images(temp, y, x)
-            #imagehigh = ism.blend_merge(temp)
-            #imagehigh = imagehigh.crop((0, 0, h*4, w*4))
             imagehigh = imagehigh[0:w*4, 0:h*4]
-            #imagehigh.save(temp + '/highimg.jpg')
-            #imagehigh = cv2.imread(temp + '/highimg.jpg')
             return imagehigh
         else:
-            img = convertImage(path)
+            #img = convertImage(path)
             highres = generator.predict(img)
             highres = cv2.convertScaleAbs(highres, alpha=(255.0))
             cv2.imwrite(temp + '/test.jpg', highres[0, :, :, ::-1])
             test = cv2.imread(temp + '/test.jpg')
             return test
+
+
+def generateHr(path):
+    with tempfile.TemporaryDirectory() as temp:
+        img = Image.open(path)
+        h, w = img.size
+        scale_factor = 4  # Assuming you want to upscale the image by a factor of 4
+        stride = 30 # Set the desired stride for overlapping windows
+
+        if h != 32 or w != 32:
+            patches, x, y = ism.sliding_window(temp, img, stride)
+
+            for patch in patches:
+                img2 = convertImage(patch)
+                hr = generator.predict(img2)
+                hr = cv2.convertScaleAbs(hr, alpha=(255.0))
+                cv2.imwrite(os.path.join(temp, f'{os.path.basename(patch)}'), hr[0, :, :, ::-1])
+
+            imagehigh = ism.merge_patches(temp, scale_factor, x, y, generateHrOld(img))
+            imagehigh = imagehigh[0:w * scale_factor, 0:h * scale_factor]
+
+            return imagehigh
+        else:
+            img = convertImage(path)
+            highres = generator.predict(img)
+            highres = cv2.convertScaleAbs(highres, alpha=(255.0))
+            cv2.imwrite(os.path.join(temp, 'patch_test.jpg'), highres[0, :, :, ::-1])
+            test = cv2.imread(os.path.join(temp, 'patch_test.jpg'))
+            return test
+
 
 
 def convertImage(path):
