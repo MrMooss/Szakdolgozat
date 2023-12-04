@@ -13,6 +13,7 @@ import NearestNeighbourInterpolation as ni
 import LanczosInterpolation as lancz
 import shutil
 import os
+from CompareImages import show_images
 
 from ImageEditor import ImageAdjustmentDialog
 
@@ -74,8 +75,8 @@ class QImageViewer(QMainWindow):
 
     def adjust_image(self):
         if self.image is not None:
-            # Create an instance of the ImageAdjustmentDialog class
             if self.interpol:
+                self.image = cv2.convertScaleAbs(self.image)
                 self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
             self.adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
             result = self.adjust_dialog.exec_()
@@ -144,6 +145,9 @@ class QImageViewer(QMainWindow):
             os.remove('bicubic.jpg')
             self.normalSize()
 
+    def compare(self):
+        show_images()
+
     def linear(self):
         if self.path != '':
             self.interpol = True
@@ -202,6 +206,7 @@ class QImageViewer(QMainWindow):
         self.nearestAct = QAction("&Nearest", self, enabled=False, triggered=self.nearest)
         self.lanczosAct = QAction("&Lanczos", self, enabled=False, triggered=self.lanczos)
         self.adjustImageAct = QAction("Adjust Image", self, enabled=False, triggered=self.adjust_image)
+        self.compare = QAction("Compare Images", self, enabled=True, triggered=self.compare)
 
 
 
@@ -216,6 +221,7 @@ class QImageViewer(QMainWindow):
         self.viewMenu.addAction(self.normalSizeAct)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.fitToWindowAct)
+        self.viewMenu.addAction(self.compare)
 
         self.picsMenu = QMenu("&Edit", self)
         self.picsMenu.addAction(self.srAct)

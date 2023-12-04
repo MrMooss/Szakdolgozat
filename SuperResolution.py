@@ -10,7 +10,7 @@ from PIL import Image, ImageQt
 import tempfile
 import shutil
 
-generator = load_model('best_gene_720_loss_2.26_ep.h5', compile=False)
+generator = load_model('best_gene_121_loss_2.16_ep.h5', compile=False)
 
 
 def generateHrOld(img):
