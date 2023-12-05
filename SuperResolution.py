@@ -37,6 +37,7 @@ class SuperResolutionGenerator(QObject):
                     progress = int((i + 1) / (total_patches * 2) * 100)  # Half progress for generateHr
                     self.progressUpdated.emit(progress)
 
+                self.progressUpdated.emit(50)
                 imagehigh = ism.merge_patches(temp, scale_factor, x, y, self.generateHrOld(img, total_patches))
                 imagehigh = imagehigh[0:w * scale_factor, 0:h * scale_factor]
                 return imagehigh
@@ -46,6 +47,7 @@ class SuperResolutionGenerator(QObject):
                 highres = cv2.convertScaleAbs(highres, alpha=(255.0))
                 cv2.imwrite(os.path.join(temp, 'patch_test.jpg'), highres[0, :, :, ::-1])
                 test = cv2.imread(os.path.join(temp, 'patch_test.jpg'))
+                self.progressUpdated.emit(50)
                 return test
 
     def generateHrOld(self, img, total_patches):
@@ -66,6 +68,7 @@ class SuperResolutionGenerator(QObject):
 
                 imagehigh = ism.merge_images(temp, y, x)
                 imagehigh = imagehigh[0:w*4, 0:h*4]
+                self.progressUpdated.emit(100)
                 return imagehigh
             else:
                 img = self.convertImage(im)
@@ -73,6 +76,7 @@ class SuperResolutionGenerator(QObject):
                 highres = cv2.convertScaleAbs(highres, alpha=(255.0))
                 cv2.imwrite(temp + '/test.jpg', highres[0, :, :, ::-1])
                 test = cv2.imread(temp + '/test.jpg')
+                self.progressUpdated.emit(100)
                 return test
 
     def convertImage(self, path):

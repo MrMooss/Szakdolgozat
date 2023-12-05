@@ -136,5 +136,5 @@ def merge_patches(temp_dir, scale_factor, w, h, bgimg):
             print(f"Skipping invalid filename: {filename}")
 
     output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
-    noise_removed = cv2.medianBlur(output, 3)
-    return noise_removed
+    #noise_removed = cv2.medianBlur(output, 3)
+    return output
