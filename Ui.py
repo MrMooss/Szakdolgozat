@@ -1,11 +1,11 @@
 import tempfile
 
-from PyQt5.QtCore import Qt, QFileInfo
+from PyQt5.QtCore import Qt, QFileInfo, QObject, pyqtSignal, QThread
 from PyQt5 import QtGui
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QScrollArea, QMessageBox, QMainWindow, QMenu, QAction, \
     qApp, QFileDialog, QPushButton, QDialog, QProgressDialog
-import SuperResolution as sr
+from SuperResWorker import SuperResolutionWorker
 import cv2
 import BicubicInterpolation as bi
 import LinearInterpolation as li
@@ -106,34 +106,53 @@ class QImageViewer(QMainWindow):
 
         self.updateActions()
 
+                
     def superRes(self):
         if self.path != '':
             self.interpol = False
-            loading_dialog = QProgressDialog("Super-Res in progress...", None, 0, 0, self)
-            loading_dialog.setWindowModality(Qt.WindowModal)
-            loading_dialog.setWindowTitle("Loading")
-            loading_dialog.setCancelButton(None)
-            loading_dialog.show()
-            qApp.processEvents()
+            self.loading_dialog = QProgressDialog("Super-Res in progress...", None, 0, 100, self)
+            self.loading_dialog.setWindowModality(Qt.WindowModal)
+            self.loading_dialog.setWindowTitle("Loading")
+            self.loading_dialog.setCancelButton(None)
+            self.loading_dialog.show()
 
-            img = sr.generateHr(self.path)
-            loading_dialog.close()
-            self.image = img
-            img_bytes = img.tobytes()
+            # Setup the thread and worker
+            self.thread = QThread()
+            self.worker = SuperResolutionWorker(self.path)
+            self.worker.moveToThread(self.thread)
 
-            width = img.shape[1]
-            height = img.shape[0]
-            bytes_per_line = img.shape[1] * 3
+            # Connect signals and slots
+            self.thread.started.connect(self.worker.run)
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.worker.progress.connect(self.updateProgress)
+            self.worker.finished.connect(self.onSuperResFinished)
 
-            # Create a QImage from the bytes
-            img = QImage(img_bytes, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
+            # Start the thread
+            self.thread.start()
 
-            self.imageLabel.setPixmap(QPixmap.fromImage(img))
-            self.normalSize()
+    def updateProgress(self, value):
+        self.loading_dialog.setValue(value)
 
-            if not self.fitToWindowAct.isChecked():
-                self.imageLabel.adjustSize()
+    def onSuperResFinished(self):
+        self.loading_dialog.close()
+        self.image = self.worker.result_image
+        img_bytes = self.image.tobytes()
+        width = self.image.shape[1]
+        height = self.image.shape[0]
+        bytes_per_line = self.image.shape[1] * 3
 
+        # Create a QImage from the bytes
+        img = QImage(img_bytes, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
+        self.imageLabel.setPixmap(QPixmap.fromImage(img))
+        self.normalSize()
+        if not self.fitToWindowAct.isChecked():
+            self.imageLabel.adjustSize()
+            
+    def updateProgress(self, value):
+        self.loading_dialog.setValue(value)
+    
     def bicubic(self):
         if self.path != '':
             self.interpol = True

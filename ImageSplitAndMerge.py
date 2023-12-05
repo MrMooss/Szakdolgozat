@@ -112,7 +112,7 @@ def merge_patches(temp_dir, scale_factor, w, h, bgimg):
     output = np.zeros((h * 128, w * 128, 3), dtype=np.uint8)
     output[0:bgimg.shape[0], 0:bgimg.shape[1]] = bgimg
     output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
-    blend_strength = 0.5 # Adjust as needed
+    blend_strength = 0.5
 
     for patch_path in patches:
         filename = os.path.splitext(os.path.basename(patch_path))[0]
@@ -123,8 +123,8 @@ def merge_patches(temp_dir, scale_factor, w, h, bgimg):
 
             start_x = x * scale_factor
             start_y = y * scale_factor
-            end_x = start_x + hr_patch.shape[1] # Width of the patch
-            end_y = start_y + hr_patch.shape[0] # Height of the patch
+            end_x = start_x + hr_patch.shape[1]
+            end_y = start_y + hr_patch.shape[0]
 
             # Blend the patched region into the output
             output[start_y:end_y, start_x:end_x] = cv2.addWeighted(
@@ -136,5 +136,5 @@ def merge_patches(temp_dir, scale_factor, w, h, bgimg):
             print(f"Skipping invalid filename: {filename}")
 
     output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
-    noise_removed = cv2.medianBlur(output, 3)
-    return noise_removed
+    #noise_removed = cv2.medianBlur(output, 3)
+    return output
