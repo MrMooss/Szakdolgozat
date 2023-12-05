@@ -109,7 +109,9 @@ def sliding_window(temp_dir, img, stride):
 
 def merge_patches(temp_dir, scale_factor, w, h, bgimg):
     patches = glob.glob(os.path.join(temp_dir, 'patch_*.jpg'))
-    output = np.zeros((h * 128, w * 128, 3), dtype=np.uint8)
+    output_height = max(h * 128, bgimg.shape[0])
+    output_width = max(w * 128, bgimg.shape[1])
+    output = np.zeros((output_height, output_width, 3), dtype=np.uint8)
     output[0:bgimg.shape[0], 0:bgimg.shape[1]] = bgimg
     output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
     blend_strength = 0.5
