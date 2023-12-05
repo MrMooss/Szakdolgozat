@@ -46,6 +46,7 @@ def generateHr(path):
         stride = 30 # Set the desired stride for overlapping windows
 
         if h != 32 or w != 32:
+            img = ism.expand_image(img)
             patches, x, y = ism.sliding_window(temp, img, stride)
 
             for patch in patches:

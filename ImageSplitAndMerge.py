@@ -5,43 +5,6 @@ import cv2
 import sys
 import os
 
-from LanczosInterpolation import lanczos_interpolation
-
-
-# img = Image.open('test.jpg')
-# h, w = img.size
-# a, b = h, w
-# while a % 32 != 0:
-#     a = a + 1
-# while b % 32 != 0:
-#     b = b + 1
-# img2 = img.crop((0, 0, a, b))
-# img2.save('test_extended.jpg')
-# w, h = img2.size
-# x, y = 0, 0
-# for i in range(0, h, 32):
-#     y = 0
-#     for j in range(0, w, 32):
-#         c = img2.crop((j, i, j + 32, i + 32))
-#         c.save('temp/' + str(x) + '-' + str(y) + '.jpg')
-#         y += 1
-#     x += 1
-#
-# images = [Image.open(x) for x in glob.glob('temp/*.jpg')]
-# new_im = Image.new('RGB', (w, h))
-#
-# x_offset = 0
-# y_offset = 0
-# for im in images:
-#     print(im.filename)
-#     new_im.paste(im, (x_offset, y_offset))
-#     x_offset += 32
-#     print(x_offset, y_offset)
-#     if x_offset == w:
-#         x_offset = 0
-#         y_offset += 32
-# new_im.save('test_merged.jpg')
-
 
 # expands the image, so it can be split into 32x32 subimages
 def expand_image(img):
@@ -122,17 +85,26 @@ def merge_images(path, w, h):
 def sliding_window(temp_dir, img, stride):
     patches = []
     h, w = img.size
-    xdb, ydb = 0, 0
-    for y in range(0, h, stride):
-        for x in range(0, w, stride):
-            patch = img.crop((x, y, x + 32, y + 32))
+
+
+    x_patches = (w - 1) // stride + 1
+    y_patches = (h - 1) // stride + 1
+
+    for y in range(0, y_patches * stride, stride):
+        for x in range(0, x_patches * stride, stride):
+
+            end_x = min(x + 32, w)
+            end_y = min(y + 32, h)
+
+            patch = img.crop((x, y, end_x, end_y))
             if patch.mode == 'RGBA':
                 patch = patch.convert('RGB')
-            patch.save(os.path.join(temp_dir, f'patch_{x}_{y}.jpg'))
-            patches.append(os.path.join(temp_dir, f'patch_{x}_{y}.jpg'))
-        xdb += 1
-    ydb = len(range(0, h, stride))
-    return patches, xdb, ydb
+
+            patch_path = os.path.join(temp_dir, f'patch_{x}_{y}.jpg')
+            patch.save(patch_path)
+            patches.append(patch_path)
+
+    return patches, x_patches, y_patches
 
 
 def merge_patches(temp_dir, scale_factor, w, h, bgimg):
