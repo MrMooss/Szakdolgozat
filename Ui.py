@@ -11,7 +11,7 @@ import BicubicInterpolation as bi
 import LinearInterpolation as li
 import NearestNeighbourInterpolation as ni
 import LanczosInterpolation as lancz
-import shutil
+import numpy as np
 import os
 from CompareImages import show_images
 
@@ -76,6 +76,7 @@ class QImageViewer(QMainWindow):
     def adjust_image(self):
         if self.image is not None:
             if self.interpol:
+                self.image = np.array(self.image)
                 self.image = cv2.convertScaleAbs(self.image)
                 self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
             self.adjust_dialog = ImageAdjustmentDialog(self.image, self.interpol)
