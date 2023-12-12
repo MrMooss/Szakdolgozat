@@ -49,7 +49,7 @@ class QImageViewer(QMainWindow):
         options = QFileDialog.Options()
         # fileName = QFileDialog.getOpenFileName(self, "Open File", QDir.currentPath())
         fileName, _ = QFileDialog.getOpenFileName(self, 'QFileDialog.getOpenFileName()', '',
-                                                'Images (*.png *.jpeg *.jpg *.bmp *.gif)', options=options)
+                                                'Images (*.png *.jpeg *.jpg)', options=options)
         if fileName:
             self.path = fileName
             self.image = cv2.imread(fileName)
