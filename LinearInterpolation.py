@@ -3,42 +3,43 @@ from PIL import Image
 import os
 import cv2
 
+def resizeLayer(old):
+    rows, cols = old.shape
+    rNew = 2 * rows
+    cNew = 2 * cols
+    new = np.zeros((rNew, cNew))
+
+    # Copy original pixels to new image at appropriate positions
+    new[0:rNew:2, 0:cNew:2] = old
+
+    # Interpolate pixels horizontally
+    for i in range(0, rNew, 2):
+        for j in range(1, cNew - 1, 2):
+            new[i, j] = (new[i, j - 1] + new[i, j + 1]) / 2
+
+    # Interpolate pixels vertically
+    for i in range(1, rNew - 1, 2):
+        for j in range(cNew):
+            new[i, j] = (new[i - 1, j] + new[i + 1, j]) / 2
+
+    return new
+
 def resizeImage(name):
     img1 = Image.open(name)
     old = np.asarray(img1)
     rows, cols, layers = old.shape
-    new = np.zeros((2 * rows - 1, 2 * cols - 1, layers))
+
+    # Adjusted new array size to (2 * rows, 2 * cols, layers)
+    new = np.zeros((2 * rows, 2 * cols, layers))
     for layer in range(3):
         new[:, :, layer] = resizeLayer(old[:, :, layer])
+
     new = new.astype(np.uint8)
     img2 = Image.fromarray(new)
-    img2.save("linear.jpg")
-    img1 = Image.open('linear.jpg')
-    old = np.asarray(img1)
-    rows, cols, layers = old.shape
-    new = np.zeros((2 * rows - 1, 2 * cols - 1, layers))
-    for layer in range(3):
-        new[:, :, layer] = resizeLayer(old[:, :, layer])
-    new = new.astype(np.uint8)
-    img2 = Image.fromarray(new)
-    cvImg = np.array(img2)
-    img2 = cvImg
-    os.remove("linear.jpg")
-    cv2.imwrite("linearx2.jpg", img2)
-    return img2
-def resizeLayer(old):
-    rows, cols = old.shape
-    rNew = 2 * rows - 1
-    cNew = 2 * cols - 1
-    new = np.zeros((rNew, cNew))
-    new[0:rNew:2, 0:cNew:2] = old[0:rows, 0:cols]
-    new[1:rNew:2, :] = (new[0:rNew - 1:2, :] + new[2:rNew:2, :]) / 2
-    new[:, 1:cNew:2] = (new[:, 0:cNew - 1:2] + new[:, 2:cNew:2]) / 2
-    new[1:rNew:2, 1:cNew:2] = (new[0:rNew - 2:2, 0:cNew - 2:2] +
-                               new[0:rNew - 2:2, 2:cNew:2] +
-                               new[2:rNew:2, 0:cNew - 2:2] +
-                               new[2:rNew:2, 2:cNew:2]) / 4
-    return new
+    img2.save("linearx2.jpg")
+
+    return np.array(img2)
+
 def linear_interpolation(path):
     img = cv2.imread(path)
     h, w, c = img.shape
